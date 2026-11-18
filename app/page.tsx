@@ -65,6 +65,7 @@ export default function Home() {
   }
 
   // Вход / Регистрация через .NET API
+  // Вход / Регистрация через .NET API
   async function handleAuth(isSignUp: boolean) {
     setLoading(true)
     const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login'
@@ -72,7 +73,7 @@ export default function Home() {
     try {
       const res = await api(endpoint, {
         method: 'POST',
-        body: JSON.stringify({ login: loginInput, password }),
+        body: JSON.stringify({ login: email, password }),
       })
 
       const data = await res.json()
@@ -85,9 +86,9 @@ export default function Home() {
         alert('Регистрация успешна! Теперь вы можете войти.')
       } else if (data.token) {
         localStorage.setItem('token', data.token)
-        localStorage.setItem('user', loginInput)
-        setUser({ login: loginInput })
-        setLoginInput('')
+        localStorage.setItem('user', email)
+        setUser({ login: email })
+        setEmail('')
         setPassword('')
         loadOrders()
         alert('Успешный вход!')
