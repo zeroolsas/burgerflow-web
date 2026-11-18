@@ -85,7 +85,7 @@ export default function Home() {
       }
 
       if (!res.ok) {
-        throw new Error(data.message || text || 'Ошибка авторизации')
+        throw new Error(`Сервер вернул ошибку ${res.status}: ${text || data.message || 'Неизвестно'}`)
       }
 
       if (isSignUp) {
