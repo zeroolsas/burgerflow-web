@@ -65,7 +65,6 @@ export default function Home() {
   }
 
   // Вход / Регистрация через .NET API
-  // Вход / Регистрация через .NET API
   async function handleAuth(isSignUp: boolean) {
     setLoading(true)
     const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login'
@@ -73,7 +72,7 @@ export default function Home() {
     try {
       const res = await api(endpoint, {
         method: 'POST',
-        body: JSON.stringify({ login: email, password }),
+        body: JSON.stringify({ login: loginInput, password }),
       })
 
       const data = await res.json()
@@ -86,9 +85,9 @@ export default function Home() {
         alert('Регистрация успешна! Теперь вы можете войти.')
       } else if (data.token) {
         localStorage.setItem('token', data.token)
-        localStorage.setItem('user', email)
-        setUser({ login: email })
-        setEmail('')
+        localStorage.setItem('user', loginInput)
+        setUser({ login: loginInput })
+        setLoginInput('')
         setPassword('')
         loadOrders()
         alert('Успешный вход!')
@@ -174,7 +173,7 @@ export default function Home() {
           <div>
             <h3>Вход / Регистрация</h3>
             <input 
-              type="text" placeholder="Логин" value={loginInput} onChange={e => setLoginInput(e.target.value)} 
+              type="text" placeholder="Логин (Email)" value={loginInput} onChange={e => setLoginInput(e.target.value)} 
               style={{ marginRight: 10, padding: 6 }} 
             />
             <input 
