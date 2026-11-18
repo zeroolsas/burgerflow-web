@@ -65,6 +65,7 @@ export default function Home() {
   }
 
   // Вход / Регистрация через .NET API
+  // Вход / Регистрация через .NET API
   async function handleAuth(isSignUp: boolean) {
     setLoading(true)
     const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login'
