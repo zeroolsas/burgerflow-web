@@ -64,12 +64,10 @@ export default function Home() {
     }
   }
 
-  // Вход / Регистрация через .NET API
-  // Вход / Регистрация через .NET API
- // Вход / Регистрация через .NET API
+  // Вход / Регистрация через .NET API (пути без /api/, чтобы не было 404)
   async function handleAuth(isSignUp: boolean) {
     setLoading(true)
-    const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login'
+    const endpoint = isSignUp ? '/auth/register' : '/auth/login'
 
     try {
       const res = await api(endpoint, {
