@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
 
 interface Dish {
@@ -18,29 +17,25 @@ interface Order {
 }
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null)
-  const [email, setEmail] = useState('')
+  const [user, setUser] = useState<{ login: string } | null>(null)
+  const [loginInput, setLoginInput] = useState('')
   const [password, setPassword] = useState('')
   const [dishes, setDishes] = useState<Dish[]>([])
   const [cart, setCart] = useState<{ [dishId: number]: number }>({})
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Проверка авторизации при загрузке
+  // Проверка сессии и загрузка данных при старте
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) loadOrders()
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) loadOrders()
-      else setOrders([])
-    })
+    const token = localStorage.getItem('token')
+    const savedUser = localStorage.getItem('user')
+    
+    if (token && savedUser) {
+      setUser({ login: savedUser })
+      loadOrders()
+    }
 
     loadMenu()
-    return () => subscription.unsubscribe()
   }, [])
 
   // Загрузка меню из .NET API
@@ -69,21 +64,48 @@ export default function Home() {
     }
   }
 
-  // Вход / Регистрация
+  // Вход / Регистрация через .NET API
   async function handleAuth(isSignUp: boolean) {
     setLoading(true)
-    const { error } = isSignUp
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password })
+    const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login'
 
-    setLoading(false)
-    if (error) alert(error.message)
-    else if (isSignUp) alert('Проверьте почту для подтверждения регистрации!')
+    try {
+      const res = await api(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({ login: loginInput, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Ошибка авторизации')
+      }
+
+      if (isSignUp) {
+        alert('Регистрация успешна! Теперь вы можете войти.')
+      } else if (data.token) {
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', loginInput)
+        setUser({ login: loginInput })
+        setLoginInput('')
+        setPassword('')
+        loadOrders()
+        alert('Успешный вход!')
+      }
+    } catch (e: any) {
+      alert(e.message || 'Ошибка соединения с сервером')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Выход
-  async function handleLogout() {
-    await supabase.auth.signOut()
+  function handleLogout() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+    setOrders([])
+    alert('Вы вышли из системы')
   }
 
   // Управление корзиной
@@ -142,7 +164,7 @@ export default function Home() {
       <div style={{ background: '#f4f4f4', padding: 15, borderRadius: 8, marginBottom: 20 }}>
         {user ? (
           <div>
-            <p>Вы вошли как: <b>{user.email}</b></p>
+            <p>Вы вошли как: <b>{user.login}</b></p>
             <button onClick={handleLogout} style={{ padding: '8px 12px', background: '#d9534f', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
               Выйти
             </button>
@@ -151,7 +173,7 @@ export default function Home() {
           <div>
             <h3>Вход / Регистрация</h3>
             <input 
-              type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} 
+              type="text" placeholder="Логин" value={loginInput} onChange={e => setLoginInput(e.target.value)} 
               style={{ marginRight: 10, padding: 6 }} 
             />
             <input 
