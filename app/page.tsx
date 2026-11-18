@@ -66,6 +66,7 @@ export default function Home() {
 
   // Вход / Регистрация через .NET API
   // Вход / Регистрация через .NET API
+ // Вход / Регистрация через .NET API
   async function handleAuth(isSignUp: boolean) {
     setLoading(true)
     const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login'
@@ -76,10 +77,17 @@ export default function Home() {
         body: JSON.stringify({ login: loginInput, password }),
       })
 
-      const data = await res.json()
+      // Проверяем, есть ли вообще текст/json в ответе перед парсингом
+      const text = await res.text()
+      let data: any = {}
+      try {
+        data = text ? JSON.parse(text) : {}
+      } catch (err) {
+        // если бэкенд вернул просто plain text
+      }
 
       if (!res.ok) {
-        throw new Error(data.message || 'Ошибка авторизации')
+        throw new Error(data.message || text || 'Ошибка авторизации')
       }
 
       if (isSignUp) {
@@ -92,6 +100,9 @@ export default function Home() {
         setPassword('')
         loadOrders()
         alert('Успешный вход!')
+      } else {
+        // На случай если при логине токен пришел в другом формате или регистрация завершилась
+        alert('Успешно!')
       }
     } catch (e: any) {
       alert(e.message || 'Ошибка соединения с сервером')
